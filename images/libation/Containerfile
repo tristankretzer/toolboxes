@@ -1,8 +1,9 @@
 ARG FEDORA_VERSION
 ARG LIBATION_VERSION
 
-LABEL org.opencontainers.image.source=https://github.com/tristankretzer/toolboxes
+LABEL org.opencontainers.image.description="A toolbox for running Libation."
 LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.source=https://github.com/tristankretzer/toolboxes
 
 FROM registry.fedoraproject.org/fedora-toolbox:${FEDORA_VERSION}
 ARG LIBATION_VERSION
