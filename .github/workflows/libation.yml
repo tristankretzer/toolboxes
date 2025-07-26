@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         fedora_version: ["42"]
-        libation_version: ["12.4.7"]
+        libation_version: ["12.4.7", "12.4.9"]
 
     runs-on: ubuntu-latest
 
