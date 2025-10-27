@@ -9,6 +9,7 @@ on:
     paths:
       - images/libation/**
       - .github/workflows/libation.yml
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -23,7 +24,6 @@ jobs:
     strategy:
       matrix:
         fedora_version: ["42"]
-        libation_version: ["12.4.7", "12.4.9"]
 
     runs-on: ubuntu-latest
 
@@ -31,13 +31,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Get latest Libation version
+        id: libation_version
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/rmcrackan/Libation/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest Libation version: $LATEST_VERSION"
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=fedora-${{matrix.fedora_version}}-libation-${{matrix.libation_version}}
+            type=raw,value=fedora-${{matrix.fedora_version}}-libation-${{steps.libation_version.outputs.version}}
+            type=raw,value=fedora-${{matrix.fedora_version}}-latest
 
       - name: Build image
         id: build
@@ -51,7 +59,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             FEDORA_VERSION=${{matrix.fedora_version}}
-            LIBATION_VERSION=${{matrix.libation_version}}
+            LIBATION_VERSION=${{steps.libation_version.outputs.version}}
           oci: true
 
       - name: Push image to GHCR
