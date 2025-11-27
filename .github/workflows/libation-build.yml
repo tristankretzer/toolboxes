@@ -1,15 +1,10 @@
-name: Libation
+name: Build Libation image
 
 on:
-  schedule:
-    - cron: '0 0 * * 1'
-  push:
-    branches:
-      - master
+  pull_request:
     paths:
       - images/libation/**
-      - .github/workflows/libation.yml
-  workflow_dispatch:
+      - .github/workflows/libation-build.yml
 
 env:
   REGISTRY: ghcr.io
@@ -17,10 +12,6 @@ env:
 
 jobs:
   build:
-    permissions:
-      contents: read
-      packages: write
-
     strategy:
       matrix:
         fedora_version: ["42", "43"]
@@ -61,10 +52,3 @@ jobs:
             FEDORA_VERSION=${{matrix.fedora_version}}
             LIBATION_VERSION=${{steps.libation_version.outputs.version}}
           oci: true
-
-      - name: Push image to GHCR
-        uses: redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c # v2.8
-        with:
-          tags: ${{ steps.build.outputs.tags }}
-          username: ${{ github.actor }}
-          password: ${{ github.token }}

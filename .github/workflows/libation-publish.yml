@@ -1,0 +1,70 @@
+name: Publish Libation image
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  push:
+    branches:
+      - master
+    paths:
+      - images/libation/**
+      - .github/workflows/libation-publish.yml
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{github.repository_owner}}/toolbox-libation
+
+jobs:
+  publish:
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        fedora_version: ["42", "43"]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: Get latest Libation version
+        id: libation_version
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/rmcrackan/Libation/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest Libation version: $LATEST_VERSION"
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=fedora-${{matrix.fedora_version}}-libation-${{steps.libation_version.outputs.version}}
+            type=raw,value=fedora-${{matrix.fedora_version}}-latest
+
+      - name: Build image
+        id: build
+        uses: redhat-actions/buildah-build@7a95fa7ee0f02d552a32753e7414641a04307056 # v2.12
+        with:
+          context: images/libation
+          containerfiles: |
+            images/libation/Containerfile
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            FEDORA_VERSION=${{matrix.fedora_version}}
+            LIBATION_VERSION=${{steps.libation_version.outputs.version}}
+          oci: true
+
+      - name: Push image to GHCR
+        uses: redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c # v2.8
+        with:
+          tags: ${{ steps.build.outputs.tags }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
