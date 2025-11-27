@@ -3,14 +3,15 @@ ARG LIBATION_VERSION
 
 FROM registry.fedoraproject.org/fedora-toolbox:${FEDORA_VERSION}
 
+ARG LIBATION_VERSION
+
 LABEL org.opencontainers.image.description="A toolbox for running Libation."
 LABEL org.opencontainers.image.licenses=MIT
 LABEL org.opencontainers.image.source=https://github.com/tristankretzer/toolboxes
 
-ARG LIBATION_VERSION
-
-RUN wget -O /tmp/libation-${LIBATION_VERSION}.rpm https://github.com/rmcrackan/Libation/releases/download/v${LIBATION_VERSION}/Libation.${LIBATION_VERSION}-linux-chardonnay-amd64.rpm
-
-RUN dnf -y update && dnf -y install gtk-update-icon-cache libicu /tmp/libation-${LIBATION_VERSION}.rpm && dnf clean all
-
-RUN rm -r /tmp/libation-${LIBATION_VERSION}.rpm
+RUN wget -O /tmp/libation.rpm \
+         https://github.com/rmcrackan/Libation/releases/download/v${LIBATION_VERSION}/Libation.${LIBATION_VERSION}-linux-chardonnay-amd64.rpm \
+    && dnf -y update \
+    && dnf -y install gtk-update-icon-cache libicu /tmp/libation.rpm \
+    && dnf clean all \
+    && rm -f /tmp/libation.rpm
