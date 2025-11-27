@@ -1,0 +1,20 @@
+{
+  "name": "toolboxes",
+  "image": "quay.io/containers/buildah:v1.33.2",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/toolboxes,type=bind,relabel=private",
+  "workspaceFolder": "/workspaces/toolboxes",
+  "runArgs": ["--device=/dev/fuse"],
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "username": "build",
+      "userUid": "1000",
+      "userGid": "1000",
+      "upgradePackages": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    }
+  },
+  "remoteUser": "build"
+}
